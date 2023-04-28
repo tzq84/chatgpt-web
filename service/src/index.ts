@@ -57,8 +57,9 @@ router.post('/config', auth, async (req, res) => {
 
 router.post('/session', async (req, res) => {
   try {
+    const token = req && req.headers["authorization"]?req.headers["authorization"].replace('Bearer ', '').trim():""
     const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY
-    const hasAuth = isNotEmptyString(AUTH_SECRET_KEY)
+    const hasAuth = isNotEmptyString(AUTH_SECRET_KEY) && token == AUTH_SECRET_KEY
     res.send({ status: 'Success', message: '', data: { auth: hasAuth, model: currentModel() } })
   }
   catch (error) {

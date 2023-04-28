@@ -3,6 +3,8 @@ import type { PluginOption } from 'vite'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import fs from 'fs';
+import https from 'https';
 
 function setupPlugins(env: ImportMetaEnv): PluginOption[] {
   return [
@@ -33,8 +35,12 @@ export default defineConfig((env) => {
     plugins: setupPlugins(viteEnv),
     server: {
       host: '0.0.0.0',
-      port: 1002,
+      port: 443,
       open: false,
+      https: {
+        key: fs.readFileSync('./certs/cert.key'),
+        cert: fs.readFileSync('./certs/cert.crt'),
+      },
       proxy: {
         '/api': {
           target: viteEnv.VITE_APP_API_BASE_URL,
