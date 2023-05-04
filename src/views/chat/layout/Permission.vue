@@ -1,9 +1,10 @@
 <script setup lang='ts'>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { NButton, NInput, NModal, useMessage } from 'naive-ui'
 import { fetchVerify } from '@/api'
 import { useAuthStore } from '@/store'
 import Icon403 from '@/icons/403.vue'
+import * as ww from '@wecom/jssdk'
 
 interface Props {
   visible: boolean
@@ -15,44 +16,80 @@ const authStore = useAuthStore()
 
 const ms = useMessage()
 
-const loading = ref(false)
+// const loading = ref(false)
 const token = ref('')
 
-const disabled = computed(() => !token.value.trim() || loading.value)
+// const disabled = computed(() => !token.value.trim() || loading.value)
 
-async function handleVerify() {
-  const secretKey = token.value.trim()
+onMounted(() => {
+  const wwLogin = ww.createWWLoginPanel({
+    el: '#ww_login',
+    params: {
+      login_type: 'CorpApp',
+      appid: 'wx22cd58d9bee18c0f',
+      agentid: '1000302',
+      redirect_uri: 'https://test.hotwater.com.cn',
+      state: 'loginState',
+      redirect_type: 'callback',
+    },
+    onCheckWeComLogin({ isWeComLogin }) {
+      console.log("isWeComLogin",isWeComLogin)
+    },
+    async onLoginSuccess({ code }) {
+      try {
+        const secretKey = await fetchVerify(code)
+        authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
+        ms.success('success')
+        window.location.reload()
+      }
+      catch (error: any) {
+        ms.error(error.message ?? 'error')
+        authStore.removeToken()
+        token.value = ''
+      }
+    },
+    onLoginFail(err) {
+      console.log("err",err)
+    },
+  })
+})
 
-  if (!secretKey)
-    return
+// async function handleVerify() {
+//   const secretKey = token.value.trim()
 
-  try {
-    loading.value = true
-    await fetchVerify(secretKey)
-    authStore.setToken(secretKey)
-    ms.success('success')
-    window.location.reload()
-  }
-  catch (error: any) {
-    ms.error(error.message ?? 'error')
-    authStore.removeToken()
-    token.value = ''
-  }
-  finally {
-    loading.value = false
-  }
-}
+//   if (!secretKey)
+//     return
 
-function handlePress(event: KeyboardEvent) {
-  if (event.key === 'Enter' && !event.shiftKey) {
-    event.preventDefault()
-    handleVerify()
-  }
-}
+//   try {
+//     loading.value = true
+//     await fetchVerify(secretKey)
+//     authStore.setToken(secretKey)
+//     ms.success('success')
+//     window.location.reload()
+//   }
+//   catch (error: any) {
+//     ms.error(error.message ?? 'error')
+//     authStore.removeToken()
+//     token.value = ''
+//   }
+//   finally {
+//     loading.value = false
+//   }
+// }
+
+// function handlePress(event: KeyboardEvent) {
+//   if (event.key === 'Enter' && !event.shiftKey) {
+//     event.preventDefault()
+//     handleVerify()
+//   }
+// }
 </script>
 
 <template>
-  <NModal :show="visible" style="width: 90%; max-width: 640px">
+  <NModal :show="visible" style="width: 90%; max-width: 480px">
+  	<div id="ww_login" name="ww_login"></div>
+  </NModal>
+  <!-- <NModal :show="visible" style="width: 90%; max-width: 640px">
     <div class="p-10 bg-white rounded dark:bg-slate-800">
       <div class="space-y-4">
         <header class="space-y-2">
@@ -76,5 +113,5 @@ function handlePress(event: KeyboardEvent) {
         </NButton>
       </div>
     </div>
-  </NModal>
+  </NModal> -->
 </template>

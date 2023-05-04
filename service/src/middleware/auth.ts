@@ -1,7 +1,9 @@
 import { isNotEmptyString } from '../utils/is'
+import { getAuthSecretKey } from '../utils'
 
 const auth = async (req, res, next) => {
-  const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY
+  // const AUTH_SECRET_KEY = process.env.AUTH_SECRET_KEY
+  const AUTH_SECRET_KEY = await getAuthSecretKey();
   if (isNotEmptyString(AUTH_SECRET_KEY)) {
     try {
       const Authorization = req.header('Authorization')

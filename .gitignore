@@ -32,3 +32,4 @@ coverage
 /service/.env
 certs/
 .env
+service/.node-persist/

@@ -10,12 +10,14 @@ interface SessionResponse {
 
 export interface AuthState {
   token: string | undefined
+  userid: string | undefined
   session: SessionResponse | null
 }
 
 export const useAuthStore = defineStore('auth-store', {
   state: (): AuthState => ({
-    token: getToken(),
+    token: getToken() && getToken().token?getToken().token:"",
+    userid: getToken() && getToken().userid?getToken().userid:"",
     session: null,
   }),
 
@@ -37,7 +39,7 @@ export const useAuthStore = defineStore('auth-store', {
       }
     },
 
-    setToken(token: string) {
+    setToken(token: any) {
       this.token = token
       setToken(token)
     },

@@ -6,28 +6,6 @@ import Sider from './sider/index.vue'
 import Permission from './Permission.vue'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
 import { useAppStore, useAuthStore, useChatStore } from '@/store'
-import * as ww from '@wecom/jssdk'
-
-const wwLogin = ww.createWWLoginPanel({
-  el: '#ww_login',
-  params: {
-    login_type: 'CorpApp',
-    appid: 'wx22cd58d9bee18c0f',
-    agentid: '1000302',
-    redirect_uri: 'https://test.hotwater.com.cn',
-    state: 'loginState',
-    redirect_type: 'callback',
-  },
-  onCheckWeComLogin({ isWeComLogin }) {
-    console.log("isWeComLogin",isWeComLogin)
-  },
-  onLoginSuccess({ code }) {
-    console.log("code",code)
-  },
-  onLoginFail(err) {
-    console.log("err",err)
-  },
-})
 
 const router = useRouter()
 const appStore = useAppStore()
