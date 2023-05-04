@@ -73,13 +73,13 @@ router.post('/session', async (req, res) => {
 router.post('/verify', async (req, res) => {
   try {
     const { token } = req.body as { token: string }
-    let userid = "";
+    let userid = "", name = "", avatar = "";
     if (!token)
       throw new Error('Secret key is empty')
 
     try {
       const accessToken = await getWechatAccessToken()
-      const response = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo', {
+      let response = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/auth/getuserinfo', {
         params: {
           access_token: accessToken,
           code: token,
@@ -88,23 +88,49 @@ router.post('/verify', async (req, res) => {
 
       if (response.data.errcode === 0) {
         userid = response.data.userid;
+        // user_ticket = response.data.user_ticket;
       } else {
         throw new Error(`Error getting user info: ${response.data.errmsg}`);
+      }
+
+      const AUTH_SECRET_KEY = await getAuthSecretKey();
+      // if (AUTH_SECRET_KEY !== token)
+      //   throw new Error('密钥无效 | Secret key is invalid')
+      if(userid) {
+        response = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/user/get', {
+          params: {
+            access_token: accessToken,
+            userid: userid
+          },
+        });
+
+        if (response.data.errcode === 0) {
+          name = response.data.name;
+          // avatar = response.data.thumb_avatar;
+        }
+
+        // response = await axios.post('https://qyapi.weixin.qq.com/cgi-bin/auth/getuserdetail?access_token='+accessToken, {
+        //   // params: {
+        //   //   access_token: accessToken
+        //   // },
+        //   data: {
+        //     user_ticket: user_ticket
+        //   }
+        // });
+
+        // console.log(user_ticket,response.data)
+        // if (response.data.errcode === 0) {
+        //   avatar = response.data.avatar;
+        // }
+
+        res.send({ status: 'Success', message: 'Verify successfully', token: AUTH_SECRET_KEY, userid: userid, name: name, avatar: avatar })
+      } else {
+        res.send({ status: 'Fail', message: "没有权限", data: null })
       }
     } catch (error) {
       console.error(error);
       throw error;
     }
-
-    const AUTH_SECRET_KEY = await getAuthSecretKey();
-    // if (AUTH_SECRET_KEY !== token)
-    //   throw new Error('密钥无效 | Secret key is invalid')
-    if(userid) {
-      res.send({ status: 'Success', message: 'Verify successfully', token: AUTH_SECRET_KEY, userid: userid })
-    } else {
-      res.send({ status: 'Fail', message: "没有权限", data: null })
-    }
-
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })

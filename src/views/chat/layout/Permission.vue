@@ -5,6 +5,10 @@ import { fetchVerify } from '@/api'
 import { useAuthStore } from '@/store'
 import Icon403 from '@/icons/403.vue'
 import * as ww from '@wecom/jssdk'
+import { useUserStore } from '@/store'
+import type { UserInfo } from '@/store/modules/user/helper'
+
+const userStore = useUserStore()
 
 interface Props {
   visible: boolean
@@ -20,15 +24,19 @@ const ms = useMessage()
 const token = ref('')
 
 // const disabled = computed(() => !token.value.trim() || loading.value)
+const env = import.meta.env;
+const appid = env.VITE_WECOM_APP_ID
+const agentid = env.VITE_WECOM_AGENT_ID
+const redirect_uri = env.VITE_WECOM_REDIRECT_URI
 
 onMounted(() => {
   const wwLogin = ww.createWWLoginPanel({
     el: '#ww_login',
     params: {
       login_type: 'CorpApp',
-      appid: 'wx22cd58d9bee18c0f',
-      agentid: '1000302',
-      redirect_uri: 'https://test.hotwater.com.cn',
+      appid,
+      agentid,
+      redirect_uri,
       state: 'loginState',
       redirect_type: 'callback',
     },
@@ -38,7 +46,10 @@ onMounted(() => {
     async onLoginSuccess({ code }) {
       try {
         const secretKey = await fetchVerify(code)
+        const name = secretKey.name
+        const avatar = secretKey.avatar
         authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
+        updateUserInfo({avatar:avatar,name:name})
         ms.success('success')
         window.location.reload()
       }
@@ -53,6 +64,10 @@ onMounted(() => {
     },
   })
 })
+
+function updateUserInfo(options: Partial<UserInfo>) {
+  userStore.updateUserInfo(options)
+}
 
 // async function handleVerify() {
 //   const secretKey = token.value.trim()

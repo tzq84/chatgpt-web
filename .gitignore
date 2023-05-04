@@ -33,3 +33,4 @@ coverage
 certs/
 .env
 service/.node-persist/
+.husky/
