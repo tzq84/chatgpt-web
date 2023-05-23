@@ -4,7 +4,7 @@ import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import fs from 'fs';
-import https from 'https';
+// import https from 'https';
 
 function setupPlugins(env: ImportMetaEnv): PluginOption[] {
   return [
@@ -47,8 +47,14 @@ export default defineConfig((env) => {
           changeOrigin: true, // 允许跨域
           rewrite: path => path.replace('/api/', '/'),
         },
+        '/chat/api': {
+          target: viteEnv.VITE_APP_API_BASE_URL,
+          changeOrigin: true, // 允许跨域
+          // rewrite: path => path.replace('/api/', '/'),
+        },
       },
     },
+    base: '/chat/',
     build: {
       reportCompressedSize: false,
       sourcemap: false,

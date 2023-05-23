@@ -74,7 +74,7 @@ export default {
     monthlyUsage: '월 사용량',
   },
   store: {
-    siderButton: '프롬프트 저장소',
+    siderButton: '프롬프트',
     local: '로컬',
     online: '온라인',
     title: '제목',

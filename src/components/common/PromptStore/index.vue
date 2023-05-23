@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { DataTableColumns } from 'naive-ui'
 import { computed, h, ref, watch } from 'vue'
-import { NButton, NCard, NDataTable, NDivider, NInput, NList, NListItem, NModal, NPopconfirm, NSpace, NTabPane, NTabs, NThing, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NInput, NList, NListItem, NModal, NPopconfirm, NSpace, NTabPane, NTabs, NThing, useMessage } from 'naive-ui'
 import PromptRecommend from '../../../assets/recommend.json'
 import { SvgIcon } from '..'
 import { usePromptStore } from '@/store'
@@ -393,7 +393,7 @@ const dataSource = computed(() => {
             </NListItem>
           </NList>
         </NTabPane>
-        <NTabPane name="download" :tab="$t('store.online')">
+        <!--<NTabPane name="download" :tab="$t('store.online')">
           <p class="mb-4">
             {{ $t('store.onlineImportWarning') }}
           </p>
@@ -440,7 +440,7 @@ const dataSource = computed(() => {
               </template>
             </NCard>
           </div>
-        </NTabPane>
+        </NTabPane>-->
       </NTabs>
     </div>
   </NModal>

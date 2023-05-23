@@ -74,7 +74,7 @@ export default {
     monthlyUsage: 'Ежемесячное использование',
   },
   store: {
-    siderButton: 'Хранилище подсказок',
+    siderButton: 'Хранилище',
     local: 'Локальное',
     online: 'Онлайн',
     title: 'Название',

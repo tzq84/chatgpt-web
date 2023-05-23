@@ -1,9 +1,9 @@
 <script setup lang='ts'>
-import { computed, onMounted, ref } from 'vue'
-import { NButton, NInput, NModal, useMessage } from 'naive-ui'
+import { onMounted, ref } from 'vue'
+import { NModal, useMessage } from 'naive-ui'
 import { fetchVerify } from '@/api'
 import { useAuthStore } from '@/store'
-import Icon403 from '@/icons/403.vue'
+// import Icon403 from '@/icons/403.vue'
 import * as ww from '@wecom/jssdk'
 import { useUserStore } from '@/store'
 import type { UserInfo } from '@/store/modules/user/helper'
@@ -47,9 +47,9 @@ onMounted(() => {
       try {
         const secretKey = await fetchVerify(code)
         const name = secretKey.name
-        const avatar = secretKey.avatar
+        // const avatar = secretKey.avatar
         authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
-        updateUserInfo({avatar:avatar,name:name})
+        updateUserInfo({name})
         ms.success('success')
         window.location.reload()
       }

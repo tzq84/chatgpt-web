@@ -74,7 +74,7 @@ export default {
     monthlyUsage: 'Monthly Usage',
   },
   store: {
-    siderButton: 'Prompt Store',
+    siderButton: 'Prompt',
     local: 'Local',
     online: 'Online',
     title: 'Title',
