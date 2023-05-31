@@ -107,6 +107,9 @@ router.post('/verify', async (req, res) => {
         if (response.data.errcode === 0) {
           name = response.data.name;
           // avatar = response.data.thumb_avatar;
+          res.send({ status: 'Success', message: 'Verify successfully', token: AUTH_SECRET_KEY, userid: userid, name: name, avatar: avatar })
+        } else {
+          res.send({ status: 'Fail', message: "没有权限", data: null })
         }
 
         // response = await axios.post('https://qyapi.weixin.qq.com/cgi-bin/auth/getuserdetail?access_token='+accessToken, {
@@ -123,7 +126,7 @@ router.post('/verify', async (req, res) => {
         //   avatar = response.data.avatar;
         // }
 
-        res.send({ status: 'Success', message: 'Verify successfully', token: AUTH_SECRET_KEY, userid: userid, name: name, avatar: avatar })
+        // res.send({ status: 'Success', message: 'Verify successfully', token: AUTH_SECRET_KEY, userid: userid, name: name, avatar: avatar })
       } else {
         res.send({ status: 'Fail', message: "没有权限", data: null })
       }

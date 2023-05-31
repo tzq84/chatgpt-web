@@ -39,7 +39,7 @@ onMounted(async () => {
       window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid="+appid+"&redirect_uri="+redirect_uri+"&response_type=code&scope=snsapi_base&state=STATE&agentid="+agentid+"#wechat_redirect"
     } else {
       await onSuccess(code);
-      window.location.href = redirect_uri;
+      // window.location.href = redirect_uri;
     }
   } else {
     const wwLogin = ww.createWWLoginPanel({
@@ -57,7 +57,7 @@ onMounted(async () => {
       },
       async onLoginSuccess({ code }) {
         await onSuccess(code);
-        window.location.reload()
+        // window.location.reload()
       },
       onLoginFail(err) {
         console.log("err",err)
@@ -69,12 +69,17 @@ onMounted(async () => {
 async function onSuccess(code) {
   try {
     const secretKey = await fetchVerify(code)
-    const name = secretKey.name
-    // const avatar = secretKey.avatar
-    authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
-    updateUserInfo({name})
-    ms.success('success')
-    // window.location.reload()
+    if(secretKey && secretKey.token) {
+      const name = secretKey.name
+      // const avatar = secretKey.avatar
+      authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
+      updateUserInfo({name})
+      ms.success('success')
+      // window.location.reload()
+      window.location.href = redirect_uri;
+    } else if(secretKey.message) {
+      ms.error(secretKey.message)
+    }
   }
   catch (error: any) {
     ms.error(error.message ?? 'error')
