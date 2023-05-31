@@ -29,41 +29,59 @@ const appid = env.VITE_WECOM_APP_ID
 const agentid = env.VITE_WECOM_AGENT_ID
 const redirect_uri = env.VITE_WECOM_REDIRECT_URI
 
-onMounted(() => {
-  const wwLogin = ww.createWWLoginPanel({
-    el: '#ww_login',
-    params: {
-      login_type: 'CorpApp',
-      appid,
-      agentid,
-      redirect_uri,
-      state: 'loginState',
-      redirect_type: 'callback',
-    },
-    onCheckWeComLogin({ isWeComLogin }) {
-      console.log("isWeComLogin",isWeComLogin)
-    },
-    async onLoginSuccess({ code }) {
-      try {
-        const secretKey = await fetchVerify(code)
-        const name = secretKey.name
-        // const avatar = secretKey.avatar
-        authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
-        updateUserInfo({name})
-        ms.success('success')
+onMounted(async () => {
+  const ua = window.navigator.userAgent.toLowerCase();
+  if(ua.match(/micromessenger/i)=='micromessenger' && !authStore.token) {
+    let url = new URL(window.location.href);
+    let params = new URLSearchParams(url.search);
+    let code = params.get("code");
+    if(!code) {
+      window.location.href = "https://open.weixin.qq.com/connect/oauth2/authorize?appid="+appid+"&redirect_uri="+redirect_uri+"&response_type=code&scope=snsapi_base&state=STATE&agentid="+agentid+"#wechat_redirect"
+    } else {
+      await onSuccess(code);
+      window.location.href = redirect_uri;
+    }
+  } else {
+    const wwLogin = ww.createWWLoginPanel({
+      el: '#ww_login',
+      params: {
+        login_type: 'CorpApp',
+        appid,
+        agentid,
+        redirect_uri,
+        state: 'loginState',
+        redirect_type: 'callback',
+      },
+      onCheckWeComLogin({ isWeComLogin }) {
+        console.log("isWeComLogin",isWeComLogin)
+      },
+      async onLoginSuccess({ code }) {
+        await onSuccess(code);
         window.location.reload()
-      }
-      catch (error: any) {
-        ms.error(error.message ?? 'error')
-        authStore.removeToken()
-        token.value = ''
-      }
-    },
-    onLoginFail(err) {
-      console.log("err",err)
-    },
-  })
+      },
+      onLoginFail(err) {
+        console.log("err",err)
+      },
+    })
+  }
 })
+
+async function onSuccess(code) {
+  try {
+    const secretKey = await fetchVerify(code)
+    const name = secretKey.name
+    // const avatar = secretKey.avatar
+    authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
+    updateUserInfo({name})
+    ms.success('success')
+    // window.location.reload()
+  }
+  catch (error: any) {
+    ms.error(error.message ?? 'error')
+    authStore.removeToken()
+    token.value = ''
+  }
+}
 
 function updateUserInfo(options: Partial<UserInfo>) {
   userStore.updateUserInfo(options)
