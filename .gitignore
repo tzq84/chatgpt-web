@@ -31,6 +31,6 @@ coverage
 # Environment variables files
 /service/.env
 certs/
-.env
+.env*
 service/.node-persist/
 .husky/
