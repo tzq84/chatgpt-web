@@ -11,6 +11,17 @@ import axios from 'axios'
 const app = express()
 const router = express.Router()
 
+const formatDate = (date) => {
+    let year = date.getFullYear();
+    let month = (1 + date.getMonth()).toString().padStart(2, '0');
+    let day = date.getDate().toString().padStart(2, '0');
+    let hours = date.getHours().toString().padStart(2, '0');
+    let minutes = date.getMinutes().toString().padStart(2, '0');
+    let seconds = date.getSeconds().toString().padStart(2, '0');
+
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
+}
+
 app.use(express.static('public'))
 app.use(express.json())
 
@@ -26,9 +37,8 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
 
   try {
     const { prompt, options = {}, systemMessage, temperature, top_p, userid, name } = req.body as RequestProps
-    console.log("chat",userid,name,prompt)
     let firstChunk = true
-    await chatReplyProcess({
+    const result = await chatReplyProcess({
       message: prompt,
       lastContext: options,
       process: (chat: ChatMessage) => {
@@ -39,6 +49,7 @@ router.post('/chat-process', [auth, limiter], async (req, res) => {
       temperature,
       top_p,
     })
+    console.log("chat",{date:formatDate(new Date()),userid,name,prompt,completion:result&&result.data&&result.data.text?result.data.text:""})
   }
   catch (error) {
     res.write(JSON.stringify(error))
