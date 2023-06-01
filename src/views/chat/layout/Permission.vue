@@ -72,7 +72,7 @@ async function onSuccess(code) {
     if(secretKey && secretKey.token) {
       const name = secretKey.name
       // const avatar = secretKey.avatar
-      authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string})
+      authStore.setToken({token:secretKey.token as string,userid:secretKey.userid as string,name:secretKey.name as string})
       updateUserInfo({name})
       ms.success('success')
       // window.location.reload()

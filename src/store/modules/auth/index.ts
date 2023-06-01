@@ -11,15 +11,20 @@ interface SessionResponse {
 export interface AuthState {
   token: string | undefined
   userid: string | undefined
+  name: string | undefined
   session: SessionResponse | null
 }
 
 export const useAuthStore = defineStore('auth-store', {
-  state: (): AuthState => ({
-    token: getToken() && getToken().token?getToken().token:"",
-    userid: getToken() && getToken().userid?getToken().userid:"",
-    session: null,
-  }),
+  state: (): AuthState => {
+    const tokenInfo = getToken();
+    return {
+      token: tokenInfo && tokenInfo.token ? tokenInfo.token : "",
+      userid: tokenInfo && tokenInfo.userid ? tokenInfo.userid : "",
+      name: tokenInfo && tokenInfo.name ? tokenInfo.name : "",
+      session: null,
+    };
+  },
 
   getters: {
     isChatGPTAPI(state): boolean {
