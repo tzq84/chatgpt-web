@@ -113,7 +113,24 @@ async function chatReplyProcess(options: RequestOptions) {
     const code = error.statusCode
     global.console.log(error)
     if (Reflect.has(ErrorCodeMessage, code))
+    {
       return sendResponse({ type: 'Fail', message: ErrorCodeMessage[code] })
+    } else if (code == 400 && error.message && error.message.includes('"code":"content_filter"')) {
+      const match = error.message.match(/\{.*\}/);
+      if (match) {
+        const jsonString = match[0];
+
+        // 使用JSON.parse()解析JSON字符串
+        const errorObject = JSON.parse(jsonString);
+
+        if(errorObject && errorObject.error && errorObject.error.message)
+        {
+          // 访问对象的message属性
+          const errorMessage = errorObject.error.message;
+          return sendResponse({ type: 'Fail', message: errorMessage })
+        }
+      }
+    }
     return sendResponse({ type: 'Fail', message: '网络错误，请稍后重试' })
       // return sendResponse({ type: 'Fail', message: error.message ?? 'Please check the back-end console' })
   }
