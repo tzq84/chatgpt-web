@@ -133,6 +133,7 @@ async function chatReplyProcess(options: RequestOptions) {
         {
           // 访问对象的message属性
           const errorMessage = errorObject.error.message;
+          console.log("content_filter",message)
           return sendResponse({ type: 'Fail', message: errorMessage })
         }
       }
