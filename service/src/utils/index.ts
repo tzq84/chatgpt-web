@@ -74,7 +74,7 @@ export async function getAuthSecretKey() {
   } else {
     try {
         const key = uuidv4();
-        const expiresIn = 3600 * 1000; // 转换为毫秒
+        const expiresIn = 24 * 3600 * 1000; // 转换为毫秒
         await persist.setItem('key', {
           key: key,
           expires: Date.now() + expiresIn, // 减少1分钟，防止在边界情况下过期
