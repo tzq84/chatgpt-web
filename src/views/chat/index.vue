@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import { NAutoComplete, NButton, NInput, useDialog, useMessage } from 'naive-ui'
 import html2canvas from 'html2canvas'
 import { Message } from './components'
+import TextComponent from './components/Message/Text.vue'
 import { useScroll } from './hooks/useScroll'
 import { useChat } from './hooks/useChat'
 import { useUsingContext } from './hooks/useUsingContext'
@@ -42,6 +43,7 @@ const inputRef = ref<Ref | null>(null)
 
 // 添加PromptStore
 const promptStore = usePromptStore()
+const instruction = '内容由AI模型自动生成，仅供参考，更多详情请查看[AI助理使用须知](https://gpt.hotwater.com.cn/AI%E5%8A%A9%E7%90%86%E4%BD%BF%E7%94%A8%E9%A1%BB%E7%9F%A5.docx)'
 
 // 使用storeToRefs，保证store修改后，联想部分能够重新渲染
 const { promptList: promptTemplate } = storeToRefs<any>(promptStore)
@@ -479,9 +481,11 @@ onUnmounted(() => {
           :class="[isMobile ? 'p-2' : 'p-4']"
         >
           <template v-if="!dataSources.length">
+              <TextComponent :text="instruction" :inversion="false"/>
           </template>
           <template v-else>
             <div>
+              <TextComponent :text="instruction" :inversion="false"/>
               <Message
                 v-for="(item, index) of dataSources"
                 :key="index"
