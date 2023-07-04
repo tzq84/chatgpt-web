@@ -5,8 +5,13 @@ import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
-import { getWechatAccessToken, getAuthSecretKey } from './utils'
+import { getWechatAccessToken, getImgWechatAccessToken, getAuthSecretKey } from './utils'
 import axios from 'axios'
+
+import { decrypt } from '@wecom/crypto'
+import xmlparser from 'express-xml-bodyparser'
+import xml2js from 'xml2js'
+import FormData from 'form-data'
 
 const app = express()
 const router = express.Router()
@@ -24,6 +29,7 @@ const formatDate = (date) => {
 
 app.use(express.static('public'))
 app.use(express.json())
+app.use(xmlparser())
 
 app.all('*', (_, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
@@ -154,6 +160,123 @@ router.post('/verify', async (req, res) => {
     res.send({ status: 'Fail', message: error.message, data: null })
   }
 })
+
+router.get('/wechat-callback', async (req, res) => {
+  try {
+    const { echostr } = req.query
+    const {message,id} = decrypt(process.env.WECHAT_ENCODING_AES_KEY, echostr);
+    if (message) {
+      res.send(message)
+    } else {
+      throw new Error('Invalid signature')
+    }
+  } catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+router.post('/wechat-callback', async (req, res) => {
+  try {
+    res.send({ status: 'Success', message: 'Image generated and sent successfully' })
+    const xml = req.body.xml
+    const {message} = decrypt(process.env.WECHAT_ENCODING_AES_KEY, xml.encrypt[0]);
+    const result = await xml2js.parseStringPromise(message, { explicitArray : false });
+    const msg = result.xml.Content
+    const toUser = result.xml.FromUserName
+    console.log("msg",toUser,msg)
+
+    // Generate image using Azure OpenAI
+    let response = await axios.post(`https://${process.env.AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com/openai/images/generations:submit?api-version=${process.env.AZURE_OPENAI_API_VERSION}`, {
+      prompt: msg,
+      size: '1024x1024',
+      n: 1
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': process.env.OPENAI_API_KEY
+      }
+    })
+
+    if (response.data.id) {
+      const operationId = response.data.id
+
+      // Poll the result of the image generation operation
+      let status = 'notRunning',count = 0
+      while (count < 10 && (status === 'notRunning' || status === 'running')) {
+        count++
+        response = await axios.get(`https://${process.env.AZURE_OPENAI_RESOURCE_NAME}.openai.azure.com/openai/operations/images/${operationId}?api-version=${process.env.AZURE_OPENAI_API_VERSION}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Api-Key': process.env.OPENAI_API_KEY
+          }
+        })
+
+        status = response.data.status
+        if (status === 'notRunning' || status === 'running') {
+          await new Promise(resolve => setTimeout(resolve, 1000)) // wait for 1 second
+        }
+      }
+
+      if (status === 'succeeded') {
+        const imageUrl = response.data.result.data[0].url
+        console.log("url",imageUrl)
+
+        // Send the generated image to the user via WeChat
+        await sendImageToUser(toUser, imageUrl)
+      } else {
+        throw new Error(`Image generation failed with status: ${status}`)
+      }
+    } else {
+      throw new Error('Image generation not started')
+    }
+  } catch (error) {
+    console.log("error",error)
+    // res.send({ status: 'Fail', message: error.message, data: null })
+  }
+})
+
+async function sendImageToUser(toUser, url) {
+  // 下载图片
+  const response = await axios({
+    method: 'GET',
+    url: url,
+    responseType: 'arraybuffer'
+  });
+
+  // 上传图片到微信服务器并获取media_id
+  const form = new FormData();
+  form.append('media', response.data, {
+      filename: 'image.jpg',
+      contentType: 'image/jpeg',
+  });
+
+  const accessToken = await getImgWechatAccessToken()
+
+  const uploadResponse = await axios({
+      method: 'POST',
+      url: `https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token=${accessToken}&type=image`,
+      data: form,
+      headers: form.getHeaders(),
+  });
+
+  const mediaId = uploadResponse.data.media_id;
+  console.log("mediaId",mediaId)
+
+  // 发送图片信息
+  await axios({
+      method: 'POST',
+      url: `https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=${accessToken}`,
+      data: {
+          touser: toUser,
+          msgtype: "image",
+          agentid: process.env.CORP_AGENT_ID_IMG,
+          image: {
+              media_id: mediaId
+          }
+      }
+  });
+}
+
 
 app.use('', router)
 app.use('/api', router)

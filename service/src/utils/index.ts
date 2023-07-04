@@ -28,40 +28,41 @@ export function sendResponse<T>(options: SendResponseOptions<T>) {
 }
 
 export async function getWechatAccessToken() {
-  await persist.init();
-  // const cachedAccessToken = accessTokenCache.get('accessToken');
-  const cachedAccessToken = await persist.getItem('accessToken');
+  return await getQyWechatAccessToken("accessToken",process.env.CORP_ID,process.env.CORP_SECRET)
+  // await persist.init();
+  // // const cachedAccessToken = accessTokenCache.get('accessToken');
+  // const cachedAccessToken = await persist.getItem('accessToken');
 
-  if (cachedAccessToken && cachedAccessToken.expires > Date.now()) {
-    return cachedAccessToken.token;
-  } else {
-    const corpId = process.env.CORP_ID, corpSecret = process.env.CORP_SECRET
-    try {
-      const response = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/gettoken', {
-        params: {
-          corpid: corpId,
-          corpsecret: corpSecret,
-        },
-      });
+  // if (cachedAccessToken && cachedAccessToken.expires > Date.now()) {
+  //   return cachedAccessToken.token;
+  // } else {
+  //   const corpId = process.env.CORP_ID, corpSecret = process.env.CORP_SECRET
+  //   try {
+  //     const response = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/gettoken', {
+  //       params: {
+  //         corpid: corpId,
+  //         corpsecret: corpSecret,
+  //       },
+  //     });
 
-      if (response.data.errcode === 0) {
-        const accessToken = response.data.access_token;
-        const expiresIn = response.data.expires_in * 1000; // 转换为毫秒
-        // accessTokenCache.set('accessToken', accessToken);
-        // 将accessToken及其过期时间持久化
-        await persist.setItem('accessToken', {
-          token: accessToken,
-          expires: Date.now() + expiresIn - 60 * 1000, // 减少1分钟，防止在边界情况下过期
-        });
-        return accessToken;
-      } else {
-        throw new Error(`Error getting access token: ${response.data.errmsg}`);
-      }
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  }
+  //     if (response.data.errcode === 0) {
+  //       const accessToken = response.data.access_token;
+  //       const expiresIn = response.data.expires_in * 1000; // 转换为毫秒
+  //       // accessTokenCache.set('accessToken', accessToken);
+  //       // 将accessToken及其过期时间持久化
+  //       await persist.setItem('accessToken', {
+  //         token: accessToken,
+  //         expires: Date.now() + expiresIn - 60 * 1000, // 减少1分钟，防止在边界情况下过期
+  //       });
+  //       return accessToken;
+  //     } else {
+  //       throw new Error(`Error getting access token: ${response.data.errmsg}`);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     throw error;
+  //   }
+  // }
 }
 
 export async function getAuthSecretKey() {
@@ -85,4 +86,45 @@ export async function getAuthSecretKey() {
       throw error;
     }
   }
+}
+
+async function getQyWechatAccessToken(name,corpId,corpSecret) {
+  await persist.init();
+  // const cachedAccessToken = accessTokenCache.get('accessToken');
+  const cachedAccessToken = await persist.getItem(name);
+
+  if (cachedAccessToken && cachedAccessToken.expires > Date.now()) {
+    return cachedAccessToken.token;
+  } else {
+    // const corpId = process.env.CORP_ID, corpSecret = process.env.CORP_SECRET_IMG
+    try {
+      const response = await axios.get('https://qyapi.weixin.qq.com/cgi-bin/gettoken', {
+        params: {
+          corpid: corpId,
+          corpsecret: corpSecret,
+        },
+      });
+
+      if (response.data.errcode === 0) {
+        const accessToken = response.data.access_token;
+        const expiresIn = response.data.expires_in * 1000; // 转换为毫秒
+        // accessTokenCache.set('accessToken', accessToken);
+        // 将accessToken及其过期时间持久化
+        await persist.setItem(name, {
+          token: accessToken,
+          expires: Date.now() + expiresIn - 60 * 1000, // 减少1分钟，防止在边界情况下过期
+        });
+        return accessToken;
+      } else {
+        throw new Error(`Error getting access token: ${response.data.errmsg}`);
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
+}
+
+export async function getImgWechatAccessToken() {
+  return await getQyWechatAccessToken("accessTokenImg",process.env.CORP_ID,process.env.CORP_SECRET_IMG)
 }
