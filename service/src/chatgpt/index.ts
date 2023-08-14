@@ -121,8 +121,8 @@ async function chatReplyProcess(options: RequestOptions) {
     if (Reflect.has(ErrorCodeMessage, code))
     {
       return sendResponse({ type: 'Fail', message: ErrorCodeMessage[code] })
-    } else if (code == 400 && error.message && error.message.includes('"code":"content_filter"')) {
-      const match = error.message.match(/\{.*\}/);
+    } else if (code == 400 && error.message) {
+      const match = error.message.match(/\{[\s\S]*\}/);
       if (match) {
         const jsonString = match[0];
 
@@ -133,7 +133,9 @@ async function chatReplyProcess(options: RequestOptions) {
         {
           // 访问对象的message属性
           const errorMessage = errorObject.error.message;
-          console.log("content_filter",message)
+          if(errorObject.error.code == "content_filter") {
+            console.log(errorObject.error.code,message)
+          }
           return sendResponse({ type: 'Fail', message: errorMessage })
         }
       }
